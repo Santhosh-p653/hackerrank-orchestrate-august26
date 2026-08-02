@@ -1,0 +1,32 @@
+name: CI Pipeline
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt
+
+      - name: Run tests
+        run: |
+          pytest -q
+
+      - name: Upload output CSV
+        uses: actions/upload-artifact@v4
+        with:
+          name: predictions-output
+          path: dataset/output.csv

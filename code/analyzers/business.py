@@ -62,10 +62,14 @@ class BusinessAnalyzer:
 
         history = context.business_history
 
-        if history:
+        if history and isinstance(history, list):
 
-            opted_out = history.get(
-                "promotions_opted_out_at"
+            # use latest relationship record
+            record = history[0]
+
+            opted_out = record.get(
+                "promotions_opted_out_at",
+                "",
             )
 
             if opted_out:
@@ -75,7 +79,7 @@ class BusinessAnalyzer:
                 )
 
             activity = int(
-                history.get(
+                record.get(
                     "activity_count_180d",
                     0,
                 )

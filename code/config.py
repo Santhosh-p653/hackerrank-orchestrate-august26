@@ -1,8 +1,10 @@
 from pathlib import Path
 
+
 ROOT_DIR = Path(__file__).resolve().parent.parent
 DATASET_DIR = ROOT_DIR / "dataset"
 MEDIA_DIR = DATASET_DIR / "media"
+
 
 CSV_FILES = {
     "messages": DATASET_DIR / "messages.csv",
@@ -19,4 +21,5 @@ CSV_FILES = {
     "sample_messages": DATASET_DIR / "sample_messages.csv",
 }
 
-OUTPUT_FILE = ROOT_DIR / "output.csv"
+
+OUTPUT_FILE = DATASET_DIR / "output.csv"

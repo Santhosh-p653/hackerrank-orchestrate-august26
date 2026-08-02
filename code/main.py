@@ -1,21 +1,28 @@
 from data_loader import load_all
+from context_builder import ContextBuilder
 
 
 def main():
+
     data = load_all()
 
-    print("Datasets loaded successfully.\n")
+    builder = ContextBuilder(data)
 
-    print(f"Messages            : {len(data.messages)}")
-    print(f"Users               : {len(data.users)}")
-    print(f"Groups              : {len(data.groups)}")
-    print(f"Group Members       : {len(data.group_members)}")
-    print(f"Businesses          : {len(data.business_accounts)}")
-    print(f"History             : {len(data.message_history)}")
-    print(f"Events              : {len(data.message_events)}")
-    print(f"Images              : {len(data.images)}")
-    print(f"Voice Notes         : {len(data.voice_notes)}")
-    print(f"Sample Messages     : {len(data.sample_messages)}")
+    print(f"Loaded {len(data.messages)} messages")
+
+    if data.messages:
+
+        context = builder.build(data.messages[0])
+
+        print("First message")
+
+        print(context.message["message_id"])
+
+        print("User found:", context.user is not None)
+
+        print("History:", len(context.history))
+
+        print("Events:", len(context.events))
 
 
 if __name__ == "__main__":

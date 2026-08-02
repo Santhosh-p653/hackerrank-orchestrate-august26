@@ -19,7 +19,7 @@ def test_decision_engine():
     )
 
     retrieved = retriever.retrieve(
-        context.message
+        data.messages[0]
     )
 
     engine = DecisionEngine()
@@ -39,6 +39,7 @@ def test_decision_engine():
 
     assert 0 <= decision.confidence <= 1
 
-    assert len(
-        decision.evidence_message_ids
-    ) >= 0
+    assert isinstance(
+        decision.evidence_message_ids,
+        list,
+    )

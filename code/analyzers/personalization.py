@@ -4,61 +4,121 @@ from context_builder import MessageContext
 
 class PersonalizationAnalyzer:
     """
-    Estimates whether the user is likely to value an interruption.
-    Higher score means the user is more likely to appreciate being notified.
+    Determines how relevant a message is for this specific user.
     """
 
-    def analyze(self, context: MessageContext) -> AnalyzerResult:
-
-        user = context.user
-
-        if user is None:
-            return AnalyzerResult(
-                score=0.5,
-                reason="User profile unavailable",
-                evidence=[],
-            )
-
-        opened = int(user.get("messages_opened_30d", 0))
-        replied = int(user.get("messages_replied_30d", 0))
-        dismissed = int(user.get("notifications_dismissed_30d", 0))
-        reported = int(user.get("messages_reported_30d", 0))
+    def analyze(
+        self,
+        context: MessageContext,
+    ) -> AnalyzerResult:
 
         score = 0.5
         reasons = []
 
-        if opened > 20:
-            score += 0.15
-            reasons.append("Frequently opens messages")
+        user = context.user
 
-        if replied > 10:
-            score += 0.20
-            reasons.append("Frequently replies")
+        if user:
 
-        if dismissed > 15:
-            score -= 0.15
-            reasons.append("Frequently dismisses notifications")
+            opened = int(
+                user.get(
+                    "messages_opened_30d",
+                    0,
+                )
+            )
 
-        if reported > 5:
-            score -= 0.10
-            reasons.append("Frequently reports messages")
+            replied = int(
+                user.get(
+                    "messages_replied_30d",
+                    0,
+                )
+            )
 
-        for membership in context.business_history:
-            if membership.get("allows_promotions") == "True":
-                score += 0.05
-                reasons.append("Allows business promotions")
+            dismissed = int(
+                user.get(
+                    "notifications_dismissed_30d",
+                    0,
+                )
+            )
 
-            if membership.get("promotions_opted_out_at"):
-                score -= 0.10
-                reasons.append("Previously opted out of promotions")
+            reported = int(
+                user.get(
+                    "messages_reported_30d",
+                    0,
+                )
+            )
 
-        score = max(0.0, min(score, 1.0))
+            if opened > 20:
+                score += 0.15
+                reasons.append(
+                    "User frequently opens messages"
+                )
 
-        if not reasons:
-            reasons.append("Neutral user preference")
+            if replied > 5:
+                score += 0.10
+                reasons.append(
+                    "User actively replies"
+                )
+
+            if dismissed > 20:
+                score -= 0.15
+                reasons.append(
+                    "User often dismisses notifications"
+                )
+
+            if reported > 3:
+                score -= 0.20
+                reasons.append(
+                    "User has reported messages before"
+                )
+
+        group = context.group
+
+        if group:
+
+            if str(
+                group.get(
+                    "group_muted_by_user",
+                    "",
+                )
+            ).lower() == "true":
+
+                score -= 0.20
+
+                reasons.append(
+                    "User muted this group"
+                )
+
+        business = context.business
+
+        if business:
+
+            if str(
+                business.get(
+                    "verified",
+                    "",
+                )
+            ).lower() == "true":
+
+                score += 0.10
+
+                reasons.append(
+                    "Verified business account"
+                )
+
+        score = max(
+            0.0,
+            min(
+                score,
+                1.0,
+            ),
+        )
 
         return AnalyzerResult(
             score=score,
-            reason="; ".join(reasons),
+            reason=(
+                "; ".join(reasons)
+                if reasons
+                else "No strong user preference found"
+            ),
             evidence=[],
         )

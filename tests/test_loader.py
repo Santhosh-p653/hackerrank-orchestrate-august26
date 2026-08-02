@@ -1,6 +1,5 @@
 from data_loader import load_all
 
-
 def test_loader():
     data = load_all()
 

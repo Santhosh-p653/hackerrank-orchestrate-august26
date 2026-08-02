@@ -2,6 +2,7 @@ from analyzers.notification_load import NotificationLoadAnalyzer
 from analyzers.personalization import PersonalizationAnalyzer
 from analyzers.priority import PriorityAnalyzer
 from analyzers.safety import SafetyAnalyzer
+from analyzers.message_type import MessageTypeAnalyzer
 from context_builder import MessageContext
 from models import Decision
 
@@ -17,6 +18,7 @@ class DecisionEngine:
         self.priority = PriorityAnalyzer()
         self.personalization = PersonalizationAnalyzer()
         self.notification_load = NotificationLoadAnalyzer()
+        self.message_type = MessageTypeAnalyzer()
 
     def decide(
         self,
@@ -28,6 +30,7 @@ class DecisionEngine:
         priority = self.priority.analyze(context)
         personalization = self.personalization.analyze(context)
         notification = self.notification_load.analyze(context)
+        message_type_result = self.message_type.analyze(context)
 
         # Weighted scoring
         notify_score = (
@@ -51,10 +54,8 @@ class DecisionEngine:
             for item in retrieved_examples[:3]
         ]
 
-        message_type = self._infer_type(
-            safety.score,
-            priority.score,
-            retrieved_examples,
+        message_type = self._map_message_type(
+            message_type_result.reason
         )
 
         scores = {
@@ -92,21 +93,27 @@ class DecisionEngine:
             evidence_message_ids=evidence,
         )
 
-    def _infer_type(
+    def _map_message_type(
         self,
-        safety_score,
-        priority_score,
-        retrieved_examples,
+        reason,
     ):
 
-        if safety_score >= 0.7:
+        reason = reason.lower()
+
+        if "scam" in reason:
             return "scam"
 
-        if priority_score >= 0.7:
-            return "urgent"
+        if "payment" in reason:
+            return "payment"
 
-        if retrieved_examples:
-            return retrieved_examples[0].message_type
+        if "promotion" in reason:
+            return "promotion"
+
+        if "greeting" in reason:
+            return "greeting"
+
+        if "forward" in reason:
+            return "forward"
 
         return "unknown"
 
@@ -120,7 +127,7 @@ class DecisionEngine:
 
         return (
             f"Decision={action}. "
-            f"Safety: {safety}. "
-            f"Priority: {priority}. "
-            f"User profile: {personalization}"
+            f"Safety: { safety }. "
+            f"Priority: { priority }. "
+            f"User profile: { personalization }"
         )

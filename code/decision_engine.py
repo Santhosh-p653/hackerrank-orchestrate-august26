@@ -5,6 +5,7 @@ from analyzers.safety import SafetyAnalyzer
 from analyzers.message_type import MessageTypeAnalyzer
 from analyzers.business import BusinessAnalyzer
 from analyzers.group import GroupAnalyzer
+from analyzers.media import MediaAnalyzer
 
 from context_builder import MessageContext
 from models import Decision
@@ -24,6 +25,7 @@ class DecisionEngine:
         self.message_type = MessageTypeAnalyzer()
         self.business = BusinessAnalyzer()
         self.group = GroupAnalyzer()
+        self.media = MediaAnalyzer()
 
     def decide(
         self,
@@ -39,13 +41,15 @@ class DecisionEngine:
 
         business = self.business.analyze(context)
         group = self.group.analyze(context)
+        media = self.media.analyze(context)
 
         notify_score = (
-            priority.score * 0.35
+            priority.score * 0.30
             + personalization.score * 0.20
             + group.score * 0.15
             + business.score * 0.15
-            + notification.score * 0.15
+            + notification.score * 0.10
+            + media.score * 0.10
             - safety.score * 0.30
         )
 

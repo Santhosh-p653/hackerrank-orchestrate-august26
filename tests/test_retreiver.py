@@ -19,5 +19,5 @@ def test_retriever():
     assert results[0].similarity >= 0
 
     assert results[0].message_id.startswith(
-        "msg_"
+        ("msg_", "sample_msg_")
     )

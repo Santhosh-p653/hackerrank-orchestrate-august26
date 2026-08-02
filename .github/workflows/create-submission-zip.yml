@@ -1,0 +1,33 @@
+name: Create Submission Package
+
+on:
+  workflow_dispatch:
+
+jobs:
+  package-submission:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Create submission files
+        run: |
+          mkdir submission
+
+          cp log.txt submission/
+          cp dataset/output.csv submission/
+
+          zip -r code.zip code/
+
+          mv code.zip submission/
+
+      - name: Create final submission zip
+        run: |
+          zip -r submission-package.zip submission/
+
+      - name: Upload submission package
+        uses: actions/upload-artifact@v4
+        with:
+          name: hackathon-submission
+          path: submission-package.zip

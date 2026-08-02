@@ -1,17 +1,8 @@
-import csv
-from pathlib import Path
-
 from data_loader import load_all
 from context_builder import ContextBuilder
 from retriever import Retriever
 from decision_engine import DecisionEngine
-
-
-OUTPUT_FILE = (
-    Path(__file__).parent.parent
-    / "dataset"
-    / "output.csv"
-)
+from output_generator import OutputGenerator
 
 
 def main():
@@ -46,48 +37,18 @@ def main():
         )
 
         rows.append(
-            {
-                "message_id": message["message_id"],
-                "action": decision.action,
-                "message_type": decision.message_type,
-                "reason": decision.reason,
-                "confidence": decision.confidence,
-                "evidence_message_ids": (
-                    ";".join(
-                        decision.evidence_message_ids
-                    )
-                    if decision.evidence_message_ids
-                    else "none"
-                ),
-            }
+            (
+                message["message_id"],
+                decision,
+            )
         )
 
-    with OUTPUT_FILE.open(
-        "w",
-        newline="",
-        encoding="utf-8",
-    ) as file:
+    generator = OutputGenerator()
 
-        writer = csv.DictWriter(
-            file,
-            fieldnames=[
-                "message_id",
-                "action",
-                "message_type",
-                "reason",
-                "confidence",
-                "evidence_message_ids",
-            ],
-        )
-
-        writer.writeheader()
-
-        writer.writerows(
-            rows
-        )
+    generator.write(rows)
 
     print(
-        f"Generated {len(rows)} predictions at {OUTPUT_FILE}"
+        f"Generated {len(rows)} predictions"
     )
 
 

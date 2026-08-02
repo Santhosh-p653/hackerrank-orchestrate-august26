@@ -1,0 +1,184 @@
+WhatsApp Message Routing / Orchestration Pipeline
+Development Chat Transcript Summary
+
+Project Objective:
+Build an AI-style message routing system that processes WhatsApp-like message datasets and predicts the correct action:
+- notify
+- digest
+- mute
+
+Required output format:
+message_id,action,message_type,reason,confidence,evidence_message_ids
+
+
+1. Architecture Design
+
+The solution was designed as an orchestration pipeline:
+
+Dataset
+   |
+   v
+Data Loader
+   |
+   v
+Context Builder
+   |
+   v
+Retriever
+   |
+   v
+Analyzer Modules
+   |
+   v
+Decision Engine
+   |
+   v
+Output Generator
+   |
+   v
+output.csv
+
+
+2. Dataset Processing
+
+Implemented data loading for:
+
+- messages.csv
+- users.csv
+- groups.csv
+- group members
+- business account data
+- message history
+- message events
+- images
+- voice notes
+- notification summaries
+- sample messages
+
+A context layer was created to combine message information with user, business, group, history, event, and media information.
+
+
+3. Context Building
+
+Implemented MessageContext containing:
+
+- message details
+- user information
+- group information
+- business information
+- message history
+- message events
+- image context
+- voice note context
+- notification summary
+- business history
+
+Media handling was integrated directly into the context builder.
+
+
+4. Retrieval System
+
+Implemented retrieval using rapidfuzz similarity matching.
+
+Historical examples from sample_messages.csv are retrieved and used as evidence for final decisions.
+
+
+5. Analyzer System
+
+Created specialized analyzers:
+
+- Safety Analyzer
+- Priority Analyzer
+- Personalization Analyzer
+- Notification Load Analyzer
+- Message Type Analyzer
+- Business Analyzer
+- Group Analyzer
+- Media Analyzer
+
+
+Each analyzer produces contextual signals used by the decision engine.
+
+
+6. Decision Engine
+
+Implemented weighted decision scoring:
+
+notify score:
+- priority
+- personalization
+- group relevance
+- business relevance
+- notification load
+- media importance
+- safety penalty
+
+mute score:
+- safety signals
+- low personalization
+- low business relevance
+
+digest score:
+- based on notification priority balance
+
+The highest scoring action is selected as the final routing decision.
+
+
+7. Output Generation
+
+Implemented OutputGenerator responsible for creating:
+
+dataset/output.csv
+
+with exact required columns:
+
+message_id
+action
+message_type
+reason
+confidence
+evidence_message_ids
+
+
+The output generator replaced manual CSV generation in main.py.
+
+
+8. Testing and Debugging
+
+Added pytest validation.
+
+Fixed issues:
+
+- Output path mismatch between generator and validator.
+- Updated OUTPUT_FILE configuration to generate:
+  dataset/output.csv
+- Verified generated predictions contain valid actions.
+
+Final validation:
+
+- All tests passing.
+- Output CSV generated successfully.
+- Required columns are present.
+- Predictions are generated for all dataset messages.
+
+
+9. Final Submission Structure
+
+Submission contains:
+
+code.zip
+- Full runnable source code
+- Requirements
+- README
+- Configuration files
+
+output.csv
+- Final predictions for all messages
+
+log.txt
+- Development transcript summary
+
+
+10. Final Status
+
+The WhatsApp Message Routing / Orchestration Pipeline is complete and ready for evaluation.

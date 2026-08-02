@@ -50,7 +50,7 @@ class DecisionEngine:
             + business.score * 0.15
             + notification.score * 0.10
             + media.score * 0.10
-            - safety.score * 0.30
+            - safety.score * 0.15
         )
 
         mute_score = (
@@ -59,7 +59,11 @@ class DecisionEngine:
             + (1 - business.score) * 0.15
         )
 
-        digest_score = 1 - notify_score
+        digest_score = (
+            (1 - priority.score) * 0.40
+            + notification.score * 0.40
+            + (1 - personalization.score) * 0.20
+        )
 
         scores = {
             "notify": notify_score,
@@ -81,10 +85,15 @@ class DecisionEngine:
             message_type_result.reason
         )
 
+        sorted_scores = sorted(
+            scores.values(),
+            reverse=True,
+        )
+
         confidence = max(
             0.0,
             min(
-                abs(scores[action]),
+                sorted_scores[0] - sorted_scores[1],
                 1.0,
             ),
         )

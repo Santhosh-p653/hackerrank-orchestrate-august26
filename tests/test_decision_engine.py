@@ -10,11 +10,17 @@ def test_decision_engine():
 
     builder = ContextBuilder(data)
 
-    context = builder.build(data.messages[0])
+    context = builder.build(
+        data.messages[0]
+    )
 
-    retriever = Retriever(data.sample_messages)
+    retriever = Retriever(
+        data.sample_messages
+    )
 
-    retrieved = retriever.retrieve(context.message)
+    retrieved = retriever.retrieve(
+        context.message
+    )
 
     engine = DecisionEngine()
 
@@ -29,4 +35,10 @@ def test_decision_engine():
         "mute",
     }
 
-    assert 0.0 <= decision.confidence <= 1.0
+    assert decision.message_type is not None
+
+    assert 0 <= decision.confidence <= 1
+
+    assert len(
+        decision.evidence_message_ids
+    ) >= 0

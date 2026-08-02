@@ -1,4 +1,4 @@
-from code.data_loader import load_all
+from data_loader import load_all
 
 
 def test_loader():

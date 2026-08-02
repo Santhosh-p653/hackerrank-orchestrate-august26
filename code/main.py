@@ -7,7 +7,11 @@ from retriever import Retriever
 from decision_engine import DecisionEngine
 
 
-OUTPUT_FILE = Path("output.csv")
+OUTPUT_FILE = (
+    Path(__file__).parent.parent
+    / "dataset"
+    / "output.csv"
+)
 
 
 def main():
@@ -83,7 +87,7 @@ def main():
         )
 
     print(
-        f"Generated {len(rows)} predictions"
+        f"Generated {len(rows)} predictions at {OUTPUT_FILE}"
     )
 
 

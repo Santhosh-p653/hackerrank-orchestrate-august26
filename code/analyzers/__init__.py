@@ -1,3 +1,4 @@
 from .base import AnalyzerResult
-from .priority import PriorityAnalyzer
 from .safety import SafetyAnalyzer
+from .priority import PriorityAnalyzer
+from .personalization import PersonalizationAnalyzer

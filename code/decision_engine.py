@@ -65,9 +65,18 @@ class DecisionEngine:
             + (1 - personalization.score) * 0.20
         )
 
-        # Urgent messages should reach the user immediately
+        priority_reason = priority.reason.lower()
+        message_reason = message_type_result.reason.lower()
+
+        # Boost important messages
         if priority.score >= 0.7:
             notify_score += 0.25
+
+        if "urgent" in priority_reason:
+            notify_score += 0.25
+
+        if "payment" in message_reason:
+            notify_score += 0.30
 
         scores = {
             "notify": notify_score,

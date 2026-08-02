@@ -3,6 +3,8 @@ from analyzers.personalization import PersonalizationAnalyzer
 from analyzers.priority import PriorityAnalyzer
 from analyzers.safety import SafetyAnalyzer
 from analyzers.message_type import MessageTypeAnalyzer
+from analyzers.business import BusinessAnalyzer
+from analyzers.group import GroupAnalyzer
 
 from context_builder import MessageContext
 from models import Decision
@@ -20,6 +22,8 @@ class DecisionEngine:
         self.personalization = PersonalizationAnalyzer()
         self.notification_load = NotificationLoadAnalyzer()
         self.message_type = MessageTypeAnalyzer()
+        self.business = BusinessAnalyzer()
+        self.group = GroupAnalyzer()
 
     def decide(
         self,
@@ -33,16 +37,22 @@ class DecisionEngine:
         notification = self.notification_load.analyze(context)
         message_type_result = self.message_type.analyze(context)
 
+        business = self.business.analyze(context)
+        group = self.group.analyze(context)
+
         notify_score = (
-            priority.score * 0.45
-            + personalization.score * 0.25
-            + notification.score * 0.20
+            priority.score * 0.35
+            + personalization.score * 0.20
+            + group.score * 0.15
+            + business.score * 0.15
+            + notification.score * 0.15
             - safety.score * 0.30
         )
 
         mute_score = (
-            safety.score * 0.70
+            safety.score * 0.65
             + (1 - personalization.score) * 0.20
+            + (1 - business.score) * 0.15
         )
 
         digest_score = 1 - notify_score
@@ -97,12 +107,11 @@ class DecisionEngine:
         action,
     ):
 
-        matched = []
-
-        for item in retrieved_examples:
-
-            if item.action == action:
-                matched.append(item)
+        matched = [
+            item
+            for item in retrieved_examples
+            if item.action == action
+        ]
 
         if not matched:
             matched = retrieved_examples

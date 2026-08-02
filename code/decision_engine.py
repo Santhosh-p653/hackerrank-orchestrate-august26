@@ -3,6 +3,7 @@ from analyzers.personalization import PersonalizationAnalyzer
 from analyzers.priority import PriorityAnalyzer
 from analyzers.safety import SafetyAnalyzer
 from analyzers.message_type import MessageTypeAnalyzer
+
 from context_builder import MessageContext
 from models import Decision
 
@@ -32,7 +33,6 @@ class DecisionEngine:
         notification = self.notification_load.analyze(context)
         message_type_result = self.message_type.analyze(context)
 
-        # Weighted scoring
         notify_score = (
             priority.score * 0.45
             + personalization.score * 0.25
@@ -45,18 +45,7 @@ class DecisionEngine:
             + (1 - personalization.score) * 0.20
         )
 
-        digest_score = (
-            1 - notify_score
-        )
-
-        evidence = [
-            item.message_id
-            for item in retrieved_examples[:3]
-        ]
-
-        message_type = self._map_message_type(
-            message_type_result.reason
-        )
+        digest_score = 1 - notify_score
 
         scores = {
             "notify": notify_score,
@@ -67,6 +56,15 @@ class DecisionEngine:
         action = max(
             scores,
             key=scores.get,
+        )
+
+        evidence = self._select_evidence(
+            retrieved_examples,
+            action,
+        )
+
+        message_type = self._map_message_type(
+            message_type_result.reason
         )
 
         confidence = max(
@@ -92,6 +90,32 @@ class DecisionEngine:
             ),
             evidence_message_ids=evidence,
         )
+
+    def _select_evidence(
+        self,
+        retrieved_examples,
+        action,
+    ):
+
+        matched = []
+
+        for item in retrieved_examples:
+
+            if item.action == action:
+                matched.append(item)
+
+        if not matched:
+            matched = retrieved_examples
+
+        matched.sort(
+            key=lambda x: x.similarity,
+            reverse=True,
+        )
+
+        return [
+            item.message_id
+            for item in matched[:3]
+        ]
 
     def _map_message_type(
         self,
@@ -127,7 +151,7 @@ class DecisionEngine:
 
         return (
             f"Decision={action}. "
-            f"Safety: { safety }. "
-            f"Priority: { priority }. "
-            f"User profile: { personalization }"
+            f"Safety: {safety}. "
+            f"Priority: {priority}. "
+            f"User profile: {personalization}"
         )

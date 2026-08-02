@@ -1,28 +1,55 @@
-from data_loader import load_all
 from context_builder import ContextBuilder
+from data_loader import load_all
+from decision_engine import DecisionEngine
+from output_generator import OutputGenerator
+from retriever import Retriever
 
 
 def main():
+
+    print("Loading datasets...")
 
     data = load_all()
 
     builder = ContextBuilder(data)
 
-    print(f"Loaded {len(data.messages)} messages")
+    retriever = Retriever(data.sample_messages)
 
-    if data.messages:
+    engine = DecisionEngine()
 
-        context = builder.build(data.messages[0])
+    generator = OutputGenerator()
 
-        print("First message")
+    rows = []
 
-        print(context.message["message_id"])
+    total = len(data.messages)
 
-        print("User found:", context.user is not None)
+    for index, message in enumerate(data.messages, start=1):
 
-        print("History:", len(context.history))
+        context = builder.build(message)
 
-        print("Events:", len(context.events))
+        retrieved = retriever.retrieve(
+            context.message
+        )
+
+        decision = engine.decide(
+            context,
+            retrieved,
+        )
+
+        rows.append(
+            (
+                message["message_id"],
+                decision,
+            )
+        )
+
+        if index % 25 == 0 or index == total:
+            print(f"Processed {index}/{total}")
+
+    generator.write(rows)
+
+    print("Finished.")
+    print("output.csv generated successfully.")
 
 
 if __name__ == "__main__":

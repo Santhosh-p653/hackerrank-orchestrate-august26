@@ -1,6 +1,6 @@
-from analyzers.personalization import PersonalizationAnalyzer
 from context_builder import ContextBuilder
 from data_loader import load_all
+from analyzers.personalization import PersonalizationAnalyzer
 
 
 def test_personalization():
@@ -9,11 +9,19 @@ def test_personalization():
 
     builder = ContextBuilder(data)
 
-    context = builder.build(data.messages[0])
+    context = builder.build(
+        data.messages[0]
+    )
 
     analyzer = PersonalizationAnalyzer()
 
-    result = analyzer.analyze(context)
+    result = analyzer.analyze(
+        context
+    )
 
-    assert 0.0 <= result.score <= 1.0
-    assert isinstance(result.reason, str)
+    assert 0 <= result.score <= 1
+
+    assert isinstance(
+        result.reason,
+        str,
+    )

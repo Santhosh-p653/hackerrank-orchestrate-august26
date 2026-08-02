@@ -8,7 +8,7 @@ def test_output_validation():
 
     main()
 
-    output = Path("output.csv")
+    output = Path("dataset/output.csv")
 
     assert output.exists()
 

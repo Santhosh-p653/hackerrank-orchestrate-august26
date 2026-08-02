@@ -1,55 +1,90 @@
-from context_builder import ContextBuilder
+import csv
+from pathlib import Path
+
 from data_loader import load_all
-from decision_engine import DecisionEngine
-from output_generator import OutputGenerator
+from context_builder import ContextBuilder
 from retriever import Retriever
+from decision_engine import DecisionEngine
+
+
+OUTPUT_FILE = Path("output.csv")
 
 
 def main():
 
-    print("Loading datasets...")
-
     data = load_all()
 
-    builder = ContextBuilder(data)
+    builder = ContextBuilder(
+        data
+    )
 
-    retriever = Retriever(data.sample_messages)
+    retriever = Retriever(
+        data.sample_messages
+    )
 
     engine = DecisionEngine()
 
-    generator = OutputGenerator()
-
     rows = []
 
-    total = len(data.messages)
+    for message in data.messages:
 
-    for index, message in enumerate(data.messages, start=1):
+        context = builder.build(
+            message
+        )
 
-        context = builder.build(message)
-
-        retrieved = retriever.retrieve(
-            context.message
+        retrieved_examples = retriever.retrieve(
+            message
         )
 
         decision = engine.decide(
             context,
-            retrieved,
+            retrieved_examples,
         )
 
         rows.append(
-            (
-                message["message_id"],
-                decision,
-            )
+            {
+                "message_id": message["message_id"],
+                "action": decision.action,
+                "message_type": decision.message_type,
+                "reason": decision.reason,
+                "confidence": decision.confidence,
+                "evidence_message_ids": (
+                    ";".join(
+                        decision.evidence_message_ids
+                    )
+                    if decision.evidence_message_ids
+                    else "none"
+                ),
+            }
         )
 
-        if index % 25 == 0 or index == total:
-            print(f"Processed {index}/{total}")
+    with OUTPUT_FILE.open(
+        "w",
+        newline="",
+        encoding="utf-8",
+    ) as file:
 
-    generator.write(rows)
+        writer = csv.DictWriter(
+            file,
+            fieldnames=[
+                "message_id",
+                "action",
+                "message_type",
+                "reason",
+                "confidence",
+                "evidence_message_ids",
+            ],
+        )
 
-    print("Finished.")
-    print("output.csv generated successfully.")
+        writer.writeheader()
+
+        writer.writerows(
+            rows
+        )
+
+    print(
+        f"Generated {len(rows)} predictions"
+    )
 
 
 if __name__ == "__main__":

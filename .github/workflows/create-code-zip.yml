@@ -1,0 +1,22 @@
+name: Create Code ZIP
+
+on:
+  workflow_dispatch:
+
+jobs:
+  zip-code:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Create code zip
+        run: |
+          zip -r code.zip code/
+
+      - name: Upload code.zip artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: code-submission
+          path: code.zip

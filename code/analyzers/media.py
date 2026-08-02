@@ -4,7 +4,7 @@ from context_builder import MessageContext
 
 class MediaAnalyzer:
     """
-    Evaluates media attached to messages.
+    Evaluates image and voice attachments.
     """
 
     def analyze(
@@ -12,28 +12,7 @@ class MediaAnalyzer:
         context: MessageContext,
     ) -> AnalyzerResult:
 
-        media = getattr(
-            context,
-            "media",
-            None,
-        )
-
-        if not media or not media.get(
-            "has_media"
-        ):
-
-            return AnalyzerResult(
-                score=0.5,
-                reason="No media attached",
-                evidence=[],
-            )
-
-        media_type = media.get(
-            "media_type",
-            "",
-        )
-
-        if media_type == "image":
+        if context.image:
 
             return AnalyzerResult(
                 score=0.7,
@@ -41,7 +20,7 @@ class MediaAnalyzer:
                 evidence=[],
             )
 
-        if media_type == "audio":
+        if context.voice_note:
 
             return AnalyzerResult(
                 score=0.7,
@@ -51,6 +30,6 @@ class MediaAnalyzer:
 
         return AnalyzerResult(
             score=0.5,
-            reason="Unknown media attachment",
+            reason="No media attachment",
             evidence=[],
         )

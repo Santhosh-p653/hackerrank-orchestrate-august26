@@ -50,7 +50,7 @@ class DecisionEngine:
             + business.score * 0.15
             + notification.score * 0.10
             + media.score * 0.10
-            - safety.score * 0.15
+            - safety.score * 0.10
         )
 
         mute_score = (
@@ -64,6 +64,10 @@ class DecisionEngine:
             + notification.score * 0.40
             + (1 - personalization.score) * 0.20
         )
+
+        # Urgent messages should reach the user immediately
+        if priority.score >= 0.7:
+            notify_score += 0.25
 
         scores = {
             "notify": notify_score,

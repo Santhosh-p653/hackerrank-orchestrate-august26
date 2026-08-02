@@ -8,8 +8,7 @@ from models import Decision
 
 class DecisionEngine:
     """
-    Combines analyzer outputs to determine
-    notify / digest / mute.
+    Combines analyzer signals into final routing decision.
     """
 
     def __init__(self):
@@ -22,61 +21,106 @@ class DecisionEngine:
     def decide(
         self,
         context: MessageContext,
-        retrieved_examples: list[dict],
+        retrieved_examples: list,
     ) -> Decision:
 
         safety = self.safety.analyze(context)
-
         priority = self.priority.analyze(context)
-
         personalization = self.personalization.analyze(context)
-
         notification = self.notification_load.analyze(context)
 
-        # Safety first
-        if safety.score >= 0.80:
+        # Weighted scoring
+        notify_score = (
+            priority.score * 0.45
+            + personalization.score * 0.25
+            + notification.score * 0.20
+            - safety.score * 0.30
+        )
 
-            return Decision(
-                action="mute",
-                message_type="spam",
-                reason=safety.reason,
-                confidence=0.95,
-                evidence_message_ids=[],
-            )
+        mute_score = (
+            safety.score * 0.70
+            + (1 - personalization.score) * 0.20
+        )
 
-        # Highly important
-        if (
-            priority.score >= 0.70
-            and personalization.score >= 0.50
-        ):
+        digest_score = (
+            1 - notify_score
+        )
 
-            return Decision(
-                action="notify",
-                message_type="urgent",
-                reason=priority.reason,
-                confidence=0.90,
-                evidence_message_ids=[
-                    row["message_id"]
-                    for row in retrieved_examples
-                ],
-            )
+        evidence = [
+            item.message_id
+            for item in retrieved_examples[:3]
+        ]
 
-        # User already overloaded
-        if notification.score <= 0.40:
+        message_type = self._infer_type(
+            safety.score,
+            priority.score,
+            retrieved_examples,
+        )
 
-            return Decision(
-                action="digest",
-                message_type="business_update",
-                reason=notification.reason,
-                confidence=0.80,
-                evidence_message_ids=[],
-            )
+        scores = {
+            "notify": notify_score,
+            "digest": digest_score,
+            "mute": mute_score,
+        }
 
-        # Default behaviour
+        action = max(
+            scores,
+            key=scores.get,
+        )
+
+        confidence = max(
+            0.0,
+            min(
+                abs(scores[action]),
+                1.0,
+            ),
+        )
+
         return Decision(
-            action="digest",
-            message_type="unknown",
-            reason="No high priority detected",
-            confidence=0.65,
-            evidence_message_ids=[],
+            action=action,
+            message_type=message_type,
+            reason=self._reason(
+                action,
+                safety.reason,
+                priority.reason,
+                personalization.reason,
+            ),
+            confidence=round(
+                confidence,
+                2,
+            ),
+            evidence_message_ids=evidence,
+        )
+
+    def _infer_type(
+        self,
+        safety_score,
+        priority_score,
+        retrieved_examples,
+    ):
+
+        if safety_score >= 0.7:
+            return "scam"
+
+        if priority_score >= 0.7:
+            return "urgent"
+
+        if retrieved_examples:
+            return retrieved_examples[0].message_type
+
+        return "unknown"
+
+    def _reason(
+        self,
+        action,
+        safety,
+        priority,
+        personalization,
+    ):
+
+        return (
+            f"Decision={action}. "
+            f"Safety: {safety}. "
+            f"Priority: {priority}. "
+            f"User profile: {personalization}"
         )
